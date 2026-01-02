@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOEIC Tycoon - 衝刺 800 分</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #1e40af;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --error: #ef4444;
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --text: #1f2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .stat-item span {
+            color: var(--accent);
+        }
+
+        /* Main Container */
+        main {
+            flex: 1;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Views */
+        .view {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Theme Grid */
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .theme-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 5px solid var(--primary);
+        }
+
+        .theme-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+        }
+
+        .theme-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .theme-desc {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Quiz Section */
+        .quiz-container {
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .option-btn {
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary);
+            background-color: #eff6ff;
+        }
+
+        .option-btn.correct {
+            background-color: #d1fae5;
+            border-color: var(--success);
+            color: #065f46;
+        }
+
+        .option-btn.wrong {
+            background-color: #fee2e2;
+            border-color: var(--error);
+            color: #991b1b;
+        }
+
+        .feedback-area {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .explanation {
+            font-size: 0.9rem;
+            color: #4b5563;
+            margin-top: 0.5rem;
+        }
+
+        /* Buttons */
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        
+        .btn-secondary {
+            background-color: #9ca3af;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: #e5e7eb;
+            border-radius: 3px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>TOEIC Tycoon 🚀</h1>
+    <div class="stats-bar">
+        <div class="stat-item">XP: <span id="xp-display">0</span></div>
+        <div class="stat-item">職位: <span id="rank-display">實習生</span></div>
+        <div class="stat-item">連勝: <span id="streak-display">0</span></div>
+    </div>
+</header>
+
+<main>
+    <div id="dashboard-view" class="view active">
+        <h2>請選擇今日挑戰主題</h2>
+        <p style="margin-bottom: 20px; color: #666;">針對 TOEIC 高頻情境設計，目標 800 分！</p>
+        
+        <div class="theme-grid" id="theme-container">
+            </div>
+    </div>
+
+    <div id="quiz-view" class="view">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        
+        <div class="quiz-container">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <span id="quiz-category" style="color:var(--primary); font-weight:bold; font-size: 0.9rem;"></span>
+                <span id="timer" style="color:var(--error); font-weight:bold;">⏱ 30s</span>
+            </div>
+
+            <div class="question-text" id="question-text">
+                Loading...
+            </div>
+
+            <div class="options-grid" id="options-container">
+                </div>
+
+            <div class="feedback-area" id="feedback-area">
+                <h3 id="feedback-title"></h3>
+                <p class="explanation" id="feedback-explanation"></p>
+                <button class="btn" id="next-btn" onclick="nextQuestion()">下一題</button>
+            </div>
+        </div>
+        
+        <button class="btn btn-secondary" style="margin-top: 20px;" onclick="showDashboard()">放棄並返回首頁</button>
+    </div>
+</main>
+
+<script>
+    // --- 1. Data Structure (模擬資料庫) ---
+    // 針對 TOEIC 800 分，設計包含 Part 5 (文法/單字) 和 Part 6 (克漏字概念)
+    const themes = [
+        {
+            id: 'business_meetings',
+            title: '💼 商務會議 (Meetings)',
+            desc: '議程安排、談判技巧與會議記錄相關詞彙。',
+            questions: [
+                {
+                    text: "The board of directors ______ unanimously to approve the merger proposal during yesterday's emergency meeting.",
+                    options: ["voted", "voting", "vote", "voter"],
+                    correct: 0,
+                    explanation: "解析：句子缺動詞。根據時間副詞 'yesterday'，應使用過去式 'voted'。Unanimously (全體一致地) 是高頻副詞。"
+                },
+                {
+                    text: "We need to ______ the agenda before sending it out to the stakeholders to ensure no topics are missed.",
+                    options: ["finalize", "final", "finally", "finality"],
+                    correct: 0,
+                    explanation: "解析：Need to 後面接原形動詞。Finalize (定案) 是商務會議常考字。"
+                },
+                {
+                    text: "Despite the heated debate, the two parties managed to reach a ______ compromise.",
+                    options: ["tentative", "tentatively", "tentativeness", "content"],
+                    correct: 0,
+                    explanation: "解析：形容詞修飾名詞 compromise。Tentative (暫時的) 是 TOEIC 必考單字。"
+                }
+            ]
+        },
+        {
+            id: 'hr_personnel',
+            title: '👥 人事與招聘 (HR)',
+            desc: '面試、福利政策、退休金與履歷相關詞彙。',
+            questions: [
+                {
+                    text: "All applicants are required to submit their resumes ______ three references.",
+                    options: ["along with", "apart from", "in case of", "due to"],
+                    correct: 0,
+                    explanation: "解析：Along with (連同...一起) 符合語意。Applicants 需提交履歷「連同」三份推薦信。"
+                },
+                {
+                    text: "The candidate's ______ experience in international marketing makes her the ideal fit for the position.",
+                    options: ["extensive", "extend", "extent", "extension"],
+                    correct: 0,
+                    explanation: "解析：需用形容詞修飾 experience。Extensive (廣泛的) 用於描述經驗豐富。"
+                }
+            ]
+        },
+        {
+            id: 'office_admin',
+            title: '🖨️ 辦公室行政 (Office)',
+            desc: '採購、設備維修、郵件往來與公告。',
+            questions: [
+                {
+                    text: "Please be ______ that the elevator will be out of service for maintenance tomorrow morning.",
+                    options: ["advised", "advice", "advising", "advisor"],
+                    correct: 0,
+                    explanation: "解析：Please be advised that... (請知悉/特此通知) 是正式商業公告的標準句型。"
+                }
+            ]
+        }
+    ];
+
+    // --- 2. State Management ---
+    let gameState = {
+        xp: 0,
+        streak: 0,
+        currentTheme: null,
+        currentQuestionIndex: 0,
+        score: 0,
+        timer: null,
+        timeLeft: 30
+    };
+
+    // --- 3. DOM Elements ---
+    const dashboardView = document.getElementById('dashboard-view');
+    const quizView = document.getElementById('quiz-view');
+    const themeContainer = document.getElementById('theme-container');
+    const xpDisplay = document.getElementById('xp-display');
+    const rankDisplay = document.getElementById('rank-display');
+    const streakDisplay = document.getElementById('streak-display');
+    
+    // --- 4. Initialization ---
+    function init() {
+        renderThemes();
+    }
+
+    function renderThemes() {
+        themeContainer.innerHTML = '';
+        themes.forEach(theme => {
+            const card = document.createElement('div');
+            card.className = 'theme-card';
+            card.innerHTML = `
+                <div class="theme-title">${theme.title}</div>
+                <div class="theme-desc">${theme.desc}</div>
+                <div style="margin-top:10px; font-size:0.8rem; color:var(--primary);">
+                    ${theme.questions.length} 題挑戰
+                </div>
+            `;
+            card.onclick = () => startTheme(theme);
+            themeContainer.appendChild(card);
+        });
+    }
+
+    // --- 5. Game Logic ---
+    function startTheme(theme) {
+        gameState.currentTheme = theme;
+        gameState.currentQuestionIndex = 0;
+        gameState.score = 0;
+        
+        dashboardView.classList.remove('active');
+        quizView.classList.add('active');
+        
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const theme = gameState.currentTheme;
+        const qIndex = gameState.currentQuestionIndex;
+        
+        // Check if finished
+        if (qIndex >= theme.questions.length) {
+            finishQuiz();
+            return;
+        }
+
+        const question = theme.questions[qIndex];
+        
+        // Reset UI
+        document.getElementById('feedback-area').style.display = 'none';
+        document.getElementById('quiz-category').textContent = theme.title;
+        document.getElementById('question-text').textContent = question.text;
+        
+        // Progress Bar
+        const progress = ((qIndex) / theme.questions.length) * 100;
+        document.getElementById('progress-fill').style.width = `${progress}%`;
+
+        // Render Options
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+        
+        question.options.forEach((opt, index) => {
+            const btn = document.createElement('div');
+            btn.className = 'option-btn';
+            btn.textContent = opt;
+            btn.onclick = () => checkAnswer(index, btn);
+            optionsContainer.appendChild(btn);
+        });
+
+        // Timer Reset
+        resetTimer();
+    }
+
+    function checkAnswer(selectedIndex, btnElement) {
+        // Prevent multiple clicks
+        if (document.getElementById('feedback-area').style.display === 'block') return;
+        
+        clearInterval(gameState.timer);
+        
+        const currentQ = gameState.currentTheme.questions[gameState.currentQuestionIndex];
+        const isCorrect = selectedIndex === currentQ.correct;
+        
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        if (isCorrect) {
+            btnElement.classList.add('correct');
+            gameState.xp += 10 + (gameState.streak * 2); // Bonus for streak
+            gameState.streak++;
+            document.getElementById('feedback-title').textContent = "🎉 正確！ Excellent!";
+            document.getElementById('feedback-title').style.color = "var(--success)";
+        } else {
+            btnElement.classList.add('wrong');
+            // Show correct answer
+            allBtns[currentQ.correct].classList.add('correct');
+            gameState.streak = 0;
+            document.getElementById('feedback-title').textContent = "⚠️ 答錯了！ Keep trying!";
+            document.getElementById('feedback-title').style.color = "var(--error)";
+        }
+
+        updateStats();
+        
+        // Show explanation
+        document.getElementById('feedback-explanation').textContent = currentQ.explanation;
+        document.getElementById('feedback-area').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        gameState.currentQuestionIndex++;
+        loadQuestion();
+    }
+
+    function finishQuiz() {
+        alert(`單元完成！\n獲得經驗值: ${gameState.xp}\n目前連勝: ${gameState.streak}`);
+        showDashboard();
+    }
+
+    function showDashboard() {
+        clearInterval(gameState.timer);
+        quizView.classList.remove('active');
+        dashboardView.classList.add('active');
+    }
+
+    function updateStats() {
+        xpDisplay.textContent = gameState.xp;
+        streakDisplay.textContent = gameState.streak;
+        
+        // Simple Rank System
+        let rank = "實習生 Intern";
+        if (gameState.xp > 50) rank = "專員 Specialist";
+        if (gameState.xp > 150) rank = "經理 Manager";
+        if (gameState.xp > 300) rank = "執行長 CEO";
+        rankDisplay.textContent = rank;
+    }
+
+    function resetTimer() {
+        clearInterval(gameState.timer);
+        gameState.timeLeft = 30;
+        const timerEl = document.getElementById('timer');
+        timerEl.textContent = `⏱ ${gameState.timeLeft}s`;
+        
+        gameState.timer = setInterval(() => {
+            gameState.timeLeft--;
+            timerEl.textContent = `⏱ ${gameState.timeLeft}s`;
+            if (gameState.timeLeft <= 0) {
+                clearInterval(gameState.timer);
+                // Time's up logic - treat as wrong answer
+                const allBtns = document.querySelectorAll('.option-btn');
+                checkAnswer(-1, allBtns[0]); // -1 will trigger wrong
+            }
+        }, 1000);
+    }
+
+    // Run init
+    init();
+
+</script>
+
+</body>
+</html>
